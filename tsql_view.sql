@@ -35,6 +35,14 @@ CREATE VIEW vw_who_read_more_2_books AS
 	WHERE num_of_books IS NOT NULL
 GO
 
+--4
+CREATE VIEW info_between_dates AS
+	SELECT b.name AS book_name, c.name, c.family FROM journal j
+	JOIN clients c ON j.client_id = c.id
+	JOIN books b ON j.book_id = b.id
+	WHERE j.ddate BETWEEN'01.01.2014' AND '01.01.2015'
+GO
+
 --5
 CREATE VIEW vw_all_clients_and_num_of_books AS
 	SELECT 
