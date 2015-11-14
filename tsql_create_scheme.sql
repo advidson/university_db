@@ -1,4 +1,4 @@
-USE [master]
+﻿USE [master]
 GO
 
 /****** Object:  Database [govLibrary]    Script Date: 08.10.2015 22:34:13 ******/
