@@ -23,8 +23,8 @@ AS
 	LEFT JOIN (
 		SELECT book_id, 
 				AVG(datediff (day, ddate, case when return_date_real IS NOT NULL THEN return_date_real ELSE GETDATE() END)) AS average 
-				FROM journal 
-				GROUP BY book_id
+		FROM journal 
+		GROUP BY book_id
 	) AS t ON id = t.book_id
 GO
 EXEC reading_time
@@ -34,17 +34,17 @@ EXEC reading_time
 CREATE PROC who_use_it
 	@title varchar(50)
 AS
-SELECT * 
-FROM clients 
-WHERE id IN (
-			SELECT CLIENT_ID 
-			FROM journal 
-			WHERE book_id = (
-							SELECT ID 
-							FROM books 
-							WHERE name LIKE '%'+@title+'%'
-							)
-			)
+	SELECT * 
+	FROM clients 
+	WHERE id IN (
+		SELECT CLIENT_ID 
+		FROM journal 
+		WHERE book_id = (
+			SELECT ID 
+			FROM books 
+			WHERE name LIKE '%'+@title+'%'
+		)
+	)
 GO
 
 EXEC who_use_it @TITLE = 'ОБЪЕКТНО'
@@ -57,10 +57,10 @@ AS
 	FROM journal
 	JOIN books b ON book_id = b.id 
 	WHERE client_id = (
-						SELECT id 
-						FROM clients 
-						WHERE family LIKE @Lname AND name LIKE @Fname
-					)
+		SELECT id 
+		FROM clients 
+		WHERE family LIKE @Lname AND name LIKE @Fname
+	)
 GO
 
 EXEC what_they_read 'Снежана', 'Морозова'
