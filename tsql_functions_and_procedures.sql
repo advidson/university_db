@@ -22,7 +22,7 @@ AS
 	FROM books b
 	LEFT JOIN (
 		SELECT book_id, 
-				AVG(datediff (day, ddate, case when return_date_real IS NOT NULL THEN return_date_real ELSE GETDATE() END)) AS average 
+				AVG(DATEDIFF (d, ddate, case when return_date_real IS NOT NULL THEN return_date_real ELSE GETDATE() END)) AS average 
 		FROM journal 
 		GROUP BY book_id
 	) AS t ON id = t.book_id
@@ -48,6 +48,7 @@ AS
 GO
 
 EXEC who_use_it @TITLE = 'ОБЪЕКТНО'
+
 --2.Создать хранимую процедуру, имеющую параметр читатель и выводящую все книги, которые он брал.
 CREATE PROC what_they_read
 	@Fname varchar(50),
@@ -65,9 +66,25 @@ GO
 
 EXEC what_they_read 'Снежана', 'Морозова'
 
---3.Создать хранимую процедуру, имеющую два параметра книга1 и  книга2. Она должна возвращать клиентов, которые вернули книгу1 быстрее чем книгу2. 
---	Если какой-либо клиент не брал одну из книг – он не рассматривается.
+--3.Создать хранимую процедуру, имеющую два параметра книга1 и  книга2. 
+-- Она должна возвращать клиентов, которые вернули книгу1 быстрее чем книгу2. 
+-- Если какой-либо клиент не брал одну из книг – он не рассматривается.
+CREATE PROC who_faster
+	@book1 int,
+	@book2 int
+AS
+	SELECT
+		j.client_id, 
+		j.book_id, 
+		j1.book_id, 
+		datediff(d, j.ddate, j.return_date_real) AS D1, 
+		datediff(d, j1.ddate, j1.return_date_real) AS D2
+	FROM journal j
+	JOIN journal j1 on j1.client_id = j.client_id and j1.book_id = @book2
+	WHERE j.book_id = @book1 and (DATEDIFF(d, j.ddate, j.return_date_real) < DATEDIFF(d, j1.ddate, j1.return_date_real))
+GO
 
+EXEC who_faster 11, 9
 
 /*с выходными параметрами*/
 --1.Создать хранимую процедуру с входным параметром тип, рассчитывающую количество книг этого типа.
@@ -81,6 +98,7 @@ GO
 DECLARE @VAL INT
 EXEC num_books_of_type 2, @VAL OUTPUT
 PRINT @VAL
+
 --2.Создать хранимую процедуру с входным параметром клиент и выходным параметром – количество книг находящихся у него
 CREATE PROC how_much_client_take (@UID INT, @NUM_OF_BOOKS INT OUTPUT)
 AS
@@ -91,13 +109,14 @@ GO
 DECLARE @HOW INT
 EXEC how_much_client_take 2, @HOW OUTPUT
 PRINT 'HE\SHE TAKES '+ CONVERT(VARCHAR(2), @HOW) + ' BOOKS'
+
 --3.Создать хранимую процедуру с входным параметром книга и двумя выходными параметрами, возвращающими самое большое время 
 	--на который брали книгу и читателя, поставившего рекорд
 CREATE PROC read_time_record (@BOOK INT, @UFname VARCHAR(50) OUTPUT, @ULname VARCHAR(50) OUTPUT, @RECORD INT OUTPUT)
 AS
 	DECLARE @UID INT
 	SELECT TOP(1) @UID = client_id,
-		@RECORD = (datediff (day, ddate, case when return_date_real IS NOT NULL THEN return_date_real ELSE GETDATE() END))
+		@RECORD = (datediff (day, ddate, CASE WHEN return_date_real IS NOT NULL THEN return_date_real ELSE GETDATE() END))
 	FROM journal
 	WHERE book_id = @BOOK
 	ORDER BY datediff (day, ddate, CASE WHEN return_date_real IS NOT NULL THEN return_date_real ELSE GETDATE() END) DESC
